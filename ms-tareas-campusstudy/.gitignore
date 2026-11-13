@@ -1,0 +1,23 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Configuración local (contiene credenciales de MySQL)
+.env
+
+# Bases de datos locales y de pruebas
+*.db
+*.sqlite3
+
+# Editores
+.vscode/
+.idea/
+*.swp
+.DS_Store

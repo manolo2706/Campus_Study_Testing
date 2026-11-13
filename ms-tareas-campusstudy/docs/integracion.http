@@ -1,0 +1,93 @@
+### Pruebas de INTEGRACIÓN — extensión "REST Client" de VS Code
+### Requiere: los simuladores (python mocks/servidores.py) o los servicios reales
+@url = http://localhost:8001
+@token = Bearer token-de-prueba
+
+### 1. ¿Qué servicios están respondiendo ahora mismo?
+GET {{url}}/salud/dependencias
+
+### 2. Crear tarea consultando de verdad a Usuarios, Materias y Grupos
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+X-Request-Id: demo-integracion-001
+X-Idempotency-Key: demo-001
+
+{
+  "titulo": "Tarea creada en la integración",
+  "descripcion": "Valida contra los servicios de los otros equipos",
+  "usuario_id": 692464,
+  "materia_id": 12,
+  "grupo_id": 1,
+  "fecha_entrega": "2026-12-15",
+  "hora_entrega": "18:00",
+  "prioridad": "alta"
+}
+
+### 3. Repetir la misma petición con la misma clave -> 200, no crea otra tarea
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+X-Idempotency-Key: demo-001
+
+{
+  "titulo": "Tarea creada en la integración",
+  "usuario_id": 692464,
+  "materia_id": 12,
+  "grupo_id": 1,
+  "fecha_entrega": "2026-12-15"
+}
+
+### 4. Materia con otro formato de respuesta (el simulador devuelve id y name)
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Taller", "usuario_id": 692464, "materia_id": 13, "fecha_entrega": "2026-12-20" }
+
+### 5. Usuario que no pertenece al grupo -> 400
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Prueba", "usuario_id": 55, "materia_id": 12, "grupo_id": 1, "fecha_entrega": "2026-12-20" }
+
+### 6. Materia inexistente (el proveedor responde 404) -> 400
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Prueba", "usuario_id": 692464, "materia_id": 999999, "fecha_entrega": "2026-12-20" }
+
+### 7. Tumbar el servicio de Usuarios
+POST http://localhost:8008/mock/caer
+
+### 8. Crear tarea con Usuarios caído -> 503 tras los reintentos (unos 13 segundos)
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Con Usuarios caido", "usuario_id": 55, "materia_id": 12, "fecha_entrega": "2026-12-20" }
+
+### 9. Las consultas siguen funcionando aunque los demás estén caídos
+GET {{url}}/api/v1/tareas?usuario_id=692464
+Authorization: {{token}}
+
+### 10. Restablecer Usuarios
+POST http://localhost:8008/mock/levantar
+
+### 11. Tumbar Notificaciones
+POST http://localhost:8007/mock/caer
+
+### 12. Crear tarea con Notificaciones caído -> 201, el evento queda pendiente
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Notificaciones caido", "usuario_id": 692464, "materia_id": 12, "fecha_entrega": "2026-12-20" }
+
+### 13. Ver qué eventos recibió Notificaciones
+GET http://localhost:8007/mock/recibidas
+
+### 14. Restablecer Notificaciones
+POST http://localhost:8007/mock/levantar

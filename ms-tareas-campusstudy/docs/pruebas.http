@@ -1,0 +1,77 @@
+### Pruebas del contrato v1.0 — extensión "REST Client" de VS Code
+@url = http://localhost:8001
+@token = Bearer token-de-prueba
+
+### Estado del servicio
+GET {{url}}/salud
+
+### Caso 1 — Crear tarea con datos válidos (201)
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Contrato de interfaz",
+  "descripcion": "Documento del servicio de Tareas",
+  "usuario_id": 692464,
+  "materia_id": 12,
+  "grupo_id": 1,
+  "fecha_entrega": "2026-12-15",
+  "hora_entrega": "18:00",
+  "prioridad": "alta"
+}
+
+### Caso 2 — Materia inexistente (400)
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Prueba", "usuario_id": 692464, "materia_id": 999999, "fecha_entrega": "2026-12-15" }
+
+### Caso 3 — Usuario que no pertenece al grupo (400)
+POST {{url}}/api/v1/tareas
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Prueba", "usuario_id": 777, "materia_id": 12, "grupo_id": 1, "fecha_entrega": "2026-12-15" }
+
+### Caso 6 — Consultar tarea inexistente (404)
+GET {{url}}/api/v1/tareas/999
+Authorization: {{token}}
+
+### Consultar tarea existente (200)
+GET {{url}}/api/v1/tareas/1
+Authorization: {{token}}
+
+### Listar por usuario (200)
+GET {{url}}/api/v1/tareas?usuario_id=692464&pagina=1&tamano=20
+Authorization: {{token}}
+
+### Listar sin filtros (400)
+GET {{url}}/api/v1/tareas
+Authorization: {{token}}
+
+### Actualizar tarea (200)
+PUT {{url}}/api/v1/tareas/1
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "titulo": "Contrato de interfaz v1.1", "fecha_entrega": "2026-12-20", "prioridad": "media" }
+
+### Cambiar estado (200)
+PUT {{url}}/api/v1/tareas/1/estado
+Authorization: {{token}}
+Content-Type: application/json
+
+{ "estado": "en_progreso" }
+
+### Caso 7 — Resumen para Estadísticas (200)
+GET {{url}}/api/v1/tareas/resumen?usuario_id=692464
+Authorization: {{token}}
+
+### Cancelar tarea (200, eliminación lógica)
+DELETE {{url}}/api/v1/tareas/1
+Authorization: {{token}}
+
+### Caso 8 — Sin token (401)
+GET {{url}}/api/v1/tareas/1
