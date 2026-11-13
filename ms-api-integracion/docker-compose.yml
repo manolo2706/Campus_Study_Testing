@@ -1,0 +1,18 @@
+services:
+  api-gateway:
+    build: .
+    container_name: campusstudy-api
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_URL: http://host.docker.internal:8081
+      GRUPOS_URL: http://host.docker.internal:8082
+      NOTIFICACIONES_URL: http://host.docker.internal:3000
+      ESTADISTICAS_URL: http://host.docker.internal:8000
+      MATERIAS_URL: http://host.docker.internal:8083
+      TAREAS_URL: http://host.docker.internal:8085
+      JWT_SECRET: 9a8f7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a
+      STUBS_ENABLED: "false"
+      CORS_ORIGINS: "*"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
